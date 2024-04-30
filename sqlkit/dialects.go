@@ -15,7 +15,6 @@ const (
 // ErrUnsupportedDialect is returned when the dialect is not supported.
 var ErrUnsupportedDialect = fmt.Errorf("unsupported dialect")
 
-// getConnector returns a dialect based on the given string.
 func getConnector(d Dialect) (Connector, error) {
 	switch d {
 	case "postgres":

@@ -9,10 +9,10 @@ import (
 )
 
 //go:embed testdata/migrations/postgres/*.sql
-var migrations embed.FS
+var pgMigrations embed.FS
 
-func TestConnectForTesting(t *testing.T) {
-	conn, err := sqlkit.ConnectForTesting(t, sqlkit.Postgres, migrations)
+func TestConnectForTesting_Postgres(t *testing.T) {
+	conn, err := sqlkit.ConnectForTesting(t, sqlkit.Postgres, pgMigrations)
 	require.NoError(t, err)
 	require.NotNil(t, conn)
 }
