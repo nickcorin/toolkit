@@ -5,28 +5,29 @@ import (
 	"database/sql"
 	"fmt"
 	"net/url"
+
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 // Config represents the configuration for a database connection.
 type Config struct {
-	Dialect  string
-	Host     string `default:"localhost"`
-	Port     int    `default:"5432"`
+	Host     string
+	Port     int
 	User     string
 	Password string
 	Database string
 	Flags    url.Values
 }
 
-func Connect(ctx context.Context, config Config) (*sql.DB, error) {
-	connector, err := getConnector(Dialect(config.Dialect))
+func Connect(ctx context.Context, dialect Dialect, config Config) (*sql.DB, error) {
+	connector, err := GetConnector(dialect)
 	if err != nil {
 		return nil, fmt.Errorf("get connector: %w", err)
 	}
 
 	conn, err := connectWithDSN(ctx, connector.Driver(), connector.DSN(config))
 	if err != nil {
-		return nil, fmt.Errorf("get DSN: %w", err)
+		return nil, fmt.Errorf("connect with dsn: %w", err)
 	}
 
 	return conn, nil
@@ -43,4 +44,18 @@ func connectWithDSN(ctx context.Context, driver, dsn string) (*sql.DB, error) {
 	}
 
 	return db, nil
+}
+
+func PgErrorIs(err error, target string) bool {
+	if err == nil {
+		return false
+	}
+
+	pg, ok := err.(*pgconn.PgError)
+	if !ok {
+		println("not pg error")
+		return false
+	}
+
+	return pg.Code == target
 }

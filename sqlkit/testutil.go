@@ -20,7 +20,7 @@ import (
 func ConnectForTesting(t *testing.T, dialect Dialect, migrationsFS embed.FS) (*sql.DB, error) {
 	t.Helper()
 
-	connector, err := getConnector(dialect)
+	connector, err := GetConnector(dialect)
 	if err != nil {
 		return nil, fmt.Errorf("get connector: %w", err)
 	}
@@ -29,7 +29,7 @@ func ConnectForTesting(t *testing.T, dialect Dialect, migrationsFS embed.FS) (*s
 	conf.Flags.Set("sslmode", "disable")
 
 	// Create a connection to the default database.
-	conn, err := Connect(context.Background(), conf)
+	conn, err := Connect(context.Background(), dialect, conf)
 	if err != nil {
 		return nil, fmt.Errorf("connect to default database: %w", err)
 	}
@@ -57,7 +57,7 @@ func ConnectForTesting(t *testing.T, dialect Dialect, migrationsFS embed.FS) (*s
 		return nil, fmt.Errorf("migrate up: %w", err)
 	}
 
-	seedConn, err := Connect(context.Background(), conf)
+	seedConn, err := Connect(context.Background(), dialect, conf)
 
 	t.Cleanup(func() {
 		// Close the connection to the seed database.

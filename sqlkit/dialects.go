@@ -15,7 +15,7 @@ const (
 // ErrUnsupportedDialect is returned when the dialect is not supported.
 var ErrUnsupportedDialect = fmt.Errorf("unsupported dialect")
 
-func getConnector(d Dialect) (Connector, error) {
+func GetConnector(d Dialect) (Connector, error) {
 	switch d {
 	case "postgres":
 		return postgres{}, nil
@@ -34,7 +34,6 @@ type postgres struct{}
 
 func (p postgres) Defaults() Config {
 	return Config{
-		Dialect:  "postgres",
 		Host:     "localhost",
 		User:     os.Getenv("USER"),
 		Port:     5432,
