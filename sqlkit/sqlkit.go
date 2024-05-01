@@ -3,6 +3,7 @@ package sqlkit
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/url"
 
@@ -51,11 +52,10 @@ func PgErrorIs(err error, target string) bool {
 		return false
 	}
 
-	pg, ok := err.(*pgconn.PgError)
-	if !ok {
-		println("not pg error")
-		return false
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return pgErr.Code == target
 	}
 
-	return pg.Code == target
+	return false
 }

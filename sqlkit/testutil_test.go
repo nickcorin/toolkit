@@ -5,6 +5,7 @@ import (
 	"embed"
 	"testing"
 
+	"github.com/jackc/pgerrcode"
 	"github.com/nickcorin/toolkit/sqlkit"
 	"github.com/stretchr/testify/require"
 )
@@ -47,6 +48,7 @@ func TestConnectForTesting_Postgres(t *testing.T) {
 			conn, err := sqlkit.Connect(context.Background(), sqlkit.Postgres, conf)
 			require.Empty(t, conn)
 			require.Error(t, err)
+			require.True(t, sqlkit.PgErrorIs(err, pgerrcode.InvalidCatalogName))
 		})
 	}
 }
