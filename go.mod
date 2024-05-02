@@ -5,6 +5,7 @@ go 1.21.6
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang-migrate/migrate/v4 v4.17.1 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438 // indirect
