@@ -6,6 +6,9 @@ import (
 	"os"
 )
 
+// Dialect represents a type of SQL database.
+//
+// E.g. Postgres, MySQL, SQLite.
 type Dialect string
 
 const (
@@ -15,6 +18,7 @@ const (
 // ErrUnsupportedDialect is returned when the dialect is not supported.
 var ErrUnsupportedDialect = fmt.Errorf("unsupported dialect")
 
+// GetConnector returns a Connector for the given dialect.
 func GetConnector(d Dialect) (Connector, error) {
 	switch d {
 	case "postgres":
@@ -24,6 +28,7 @@ func GetConnector(d Dialect) (Connector, error) {
 	}
 }
 
+// Connector is an interface that provides methods for configuring a database connection.
 type Connector interface {
 	Defaults() Config
 	Driver() string
