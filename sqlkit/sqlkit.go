@@ -10,6 +10,16 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
+// Scannable is an interface that wraps the Scan method.
+type Scannable interface {
+	Scan(dest ...interface{}) error
+}
+
+var (
+	_ Scannable = (*sql.Row)(nil)
+	_ Scannable = (*sql.Rows)(nil)
+)
+
 // Config represents the configuration for a database connection.
 type Config struct {
 	Host     string

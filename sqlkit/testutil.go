@@ -47,6 +47,9 @@ func ConnectForTesting(t *testing.T, dialect Dialect, migrationsFS embed.FS) (*s
 
 	conf.Database = seedDB
 	source, err := iofs.New(migrationsFS, migrationsPath)
+	if err != nil {
+		return nil, fmt.Errorf("create migrations source: %w", err)
+	}
 
 	migrator, err := migrate.NewWithSourceInstance("iofs", source, connector.DSN(conf))
 	if err != nil {
@@ -58,6 +61,9 @@ func ConnectForTesting(t *testing.T, dialect Dialect, migrationsFS embed.FS) (*s
 	}
 
 	seedConn, err := Connect(context.Background(), dialect, conf)
+	if err != nil {
+		return nil, fmt.Errorf("connect to seed database: %w", err)
+	}
 
 	t.Cleanup(func() {
 		// Close the connection to the seed database.
