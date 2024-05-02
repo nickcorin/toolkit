@@ -18,7 +18,9 @@ func TestPostgresCursorStore(t *testing.T) {
 }
 
 func testCursorStore(t *testing.T, cursorStore flux.CursorStore[uint]) {
-	cursor, err := cursorStore.CreateCursor(context.Background(), "cursors", 0)
+	cursorName := "test-cursor"
+
+	cursor, err := cursorStore.CreateCursor(context.Background(), cursorName, 0)
 	require.NoError(t, err)
 	require.NotNil(t, cursor)
 
@@ -30,18 +32,30 @@ func testCursorStore(t *testing.T, cursorStore flux.CursorStore[uint]) {
 	require.NoError(t, err)
 	require.NotNil(t, cursor3)
 
-	require.EqualValues(t, cursor.ID(), cursor2.ID())
-	require.EqualValues(t, cursor2.ID(), cursor3.ID())
+	require.Equal(t, cursor.ID(), cursor2.ID())
+	require.Equal(t, cursor2.ID(), cursor3.ID())
 
-	require.EqualValues(t, cursor.Name(), cursor2.Name())
-	require.EqualValues(t, cursor2.Name(), cursor3.Name())
+	require.Equal(t, cursor.Name(), cursor2.Name())
+	require.Equal(t, cursor2.Name(), cursor3.Name())
 
-	require.EqualValues(t, cursor.Sequence(), cursor2.Sequence())
-	require.EqualValues(t, cursor2.Sequence(), cursor3.Sequence())
+	require.Equal(t, cursor.Sequence(), cursor2.Sequence())
+	require.Equal(t, cursor2.Sequence(), cursor3.Sequence())
 
-	require.EqualValues(t, cursor.CreatedAt(), cursor2.CreatedAt())
-	require.EqualValues(t, cursor2.CreatedAt(), cursor3.CreatedAt())
+	require.Equal(t, cursor.CreatedAt(), cursor2.CreatedAt())
+	require.Equal(t, cursor2.CreatedAt(), cursor3.CreatedAt())
 
-	require.EqualValues(t, cursor.UpdatedAt(), cursor2.UpdatedAt())
-	require.EqualValues(t, cursor2.UpdatedAt(), cursor3.UpdatedAt())
+	require.Equal(t, cursor.UpdatedAt(), cursor2.UpdatedAt())
+	require.Equal(t, cursor2.UpdatedAt(), cursor3.UpdatedAt())
+
+	require.Equal(t, cursorName, cursor.Name())
+	require.Equal(t, uint(0), cursor.Sequence())
+
+	err = cursorStore.UpdateCursor(context.Background(), cursor.ID(), 1)
+	require.NoError(t, err)
+
+	cursor4, err := cursorStore.LookupCursorByID(context.Background(), cursor.ID())
+	require.NoError(t, err)
+	require.NotNil(t, cursor4)
+
+	require.Equal(t, uint(1), cursor4.Sequence())
 }

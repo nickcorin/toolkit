@@ -48,9 +48,20 @@ func (cursor *defaultCursor[SEQ]) UpdatedAt() time.Time { return cursor.updatedA
 
 // CursorStore is an interface that allows the creation and lookup of cursors.
 type CursorStore[SEQ comparable] interface {
-	CreateCursor(ctx context.Context, name string, sequence SEQ) (Cursor[SEQ], error)
+	CursorReader[SEQ]
+	CursorWriter[SEQ]
+}
+
+// CursorReader allows read-only access to a cursor store.
+type CursorReader[SEQ comparable] interface {
 	LookupCursorByID(ctx context.Context, id string) (Cursor[SEQ], error)
 	LookupCursorByName(ctx context.Context, name string) (Cursor[SEQ], error)
+}
+
+// CursorWriter allows write-only access to a cursor store.
+type CursorWriter[SEQ comparable] interface {
+	CreateCursor(ctx context.Context, name string, sequence SEQ) (Cursor[SEQ], error)
+	UpdateCursor(ctx context.Context, id string, sequence SEQ) error
 }
 
 // NewPostgresCursorStore returns a new instance of PostgresCursorStore.
@@ -84,6 +95,17 @@ func (store *PostgresCursorStore[SEQ]) LookupCursorByID(ctx context.Context, id 
 func (store *PostgresCursorStore[SEQ]) LookupCursorByName(ctx context.Context, name string) (Cursor[SEQ], error) {
 	query := "SELECT * FROM " + store.tableName + " WHERE name = $1"
 	return scanCursor[SEQ](store.conn.QueryRowContext(ctx, query, name))
+}
+
+func (store *PostgresCursorStore[SEQ]) UpdateCursor(ctx context.Context, id string, sequence SEQ) error {
+	query := "UPDATE " + store.tableName + " SET sequence = $1, updated_at = $2 WHERE id = $3"
+
+	_, err := store.conn.ExecContext(ctx, query, sequence, time.Now().UTC(), id)
+	if err != nil {
+		return fmt.Errorf("update cursor: %w", err)
+	}
+
+	return nil
 }
 
 func scanCursor[SEQ comparable](s sqlkit.Scannable) (*defaultCursor[SEQ], error) {
