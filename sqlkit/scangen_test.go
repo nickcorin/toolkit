@@ -13,7 +13,13 @@ import (
 func TestParse(t *testing.T) {
 	parser := sqlkit.NewParser()
 
-	t.Run("successful parse", func(t *testing.T) {
+	t.Run("successful parse, same pkg", func(t *testing.T) {
+		parsed, err := parser.Parse("testdata/qux/qux.go", "gen")
+		require.NoError(t, err)
+		require.NotNil(t, parsed)
+	})
+
+	t.Run("successful parse, different pkg", func(t *testing.T) {
 		parsed, err := parser.Parse("testdata/foo/bar/bar.go", "bar")
 		require.NoError(t, err)
 		require.NotNil(t, parsed)
@@ -21,14 +27,14 @@ func TestParse(t *testing.T) {
 
 	t.Run("failed parse, non-scanner field", func(t *testing.T) {
 		parsed, err := parser.Parse("testdata/corge/garply/garply.go", "garply")
-		require.Nil(t, parsed)
 		require.Error(t, err)
+		require.Nil(t, parsed)
 	})
 
 	t.Run("failed parse, missing embed", func(t *testing.T) {
-		parsed, err := parser.Parse("testdata/foo/quux/quux.go", "quux")
-		require.Nil(t, parsed)
+		parsed, err := parser.Parse("testdata/foo/quux/quux.go", "Quux")
 		require.Error(t, err)
+		require.Nil(t, parsed)
 	})
 }
 

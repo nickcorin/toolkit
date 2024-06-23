@@ -1,4 +1,4 @@
-package foo
+package qux
 
 import "time"
 

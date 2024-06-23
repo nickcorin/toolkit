@@ -22,7 +22,7 @@ type PostgresRepository struct {
 }
 
 func NewPostgresRepository(conn *sql.DB) *PostgresRepository {
-	return &postgresRepository{
+	return &PostgresRepository{
 		conn:      conn,
 		tableName: "foos",
 		cols:      []string{"a", "b", "c", "d_override", "e", "f"},
@@ -43,7 +43,7 @@ func (r *PostgresRepository) listWhere(ctx context.Context, where string, args .
 	return r.list(rows)
 }
 
-func (r *PostgresRepository) list(rows sqlkit.Scannable) ([]*foo.Foo, error) {
+func (r *PostgresRepository) list(rows *sql.Rows) ([]*foo.Foo, error) {
 	ret := make([]*foo.Foo, 0)
 	for rows.Next() {
 		item, err := r.scan(rows)

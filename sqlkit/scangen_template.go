@@ -62,7 +62,7 @@ type {{ .Dialect.String | export }}Repository struct {
 }
 
 func New{{ .Dialect.String | export }}Repository(conn *sql.DB) *{{ .Dialect.String | export }}Repository {
-    return &{{ .Dialect }}Repository{
+    return &{{ .Dialect.String | export }}Repository{
         conn: conn,
         tableName: "{{ .TableName }}",
         cols: []string{ {{- .File.Fields | cols | join -}} },
@@ -83,7 +83,7 @@ func (r *{{ .Dialect.String | export }}Repository) listWhere(ctx context.Context
     return r.list(rows)
 }
 
-func (r *{{ .Dialect.String | export }}Repository) list(rows sqlkit.Scannable) ([]*{{ .File.SourceType }}, error) {
+func (r *{{ .Dialect.String | export }}Repository) list(rows *sql.Rows) ([]*{{ .File.SourceType }}, error) {
    ret := make([]*{{ .File.SourceType }}, 0)
     for rows.Next() {
         item, err := r.scan(rows)

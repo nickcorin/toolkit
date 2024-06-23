@@ -182,8 +182,23 @@ func (p *Parser) Parse(sourceFile, scangenType string) (*parsedFile, error) {
 		if baseStruct != nil {
 			return nil, fmt.Errorf("multiple embedded structs found in target struct")
 		}
+
+		named, ok := scangenStruct.Field(i).Type().(*types.Named)
+		if !ok {
+			return nil, fmt.Errorf("embedded struct is not a named type")
+		}
+
 		baseStruct = scangenStruct.Field(i).Type().Underlying().(*types.Struct)
-		file.SourceType = filepath.Base(scangenStruct.Field(i).Type().String())
+
+		if named.Obj().Pkg().Name() != file.Pkg {
+			file.SourceType = filepath.Base(scangenStruct.Field(i).Type().String())
+		} else {
+			file.SourceType = named.Obj().Name()
+		}
+	}
+
+	if file.SourceType == "" {
+		return nil, fmt.Errorf("no embedded struct found in target struct")
 	}
 
 	baseFields, err := p.processStruct(baseStruct)
