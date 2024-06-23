@@ -33,11 +33,6 @@ func GetDialectFromString(s string) Dialect {
 	return d
 }
 
-// String returns the string representation of the dialect.
-func (d Dialect) String() string {
-	return string(d)
-}
-
 // Valid returns true if the dialect is a valid dialect.
 func (d Dialect) Valid() bool {
 	return d > UnknownDialect && d < sentinel
