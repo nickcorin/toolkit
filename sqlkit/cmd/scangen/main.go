@@ -16,9 +16,8 @@ import (
  */
 
 var (
-	inFile  = flag.String("in", os.Getenv("GOFILE"), "file containing the scangen type")
-	outFile = flag.String("out", "", "file to ")
-
+	inFile       = flag.String("in", os.Getenv("GOFILE"), "file containing the scangen type")
+	outFile      = flag.String("out", "", "output file to write")
 	tableName    = flag.String("tableName", "", "name of the table")
 	targetStruct = flag.String("type", "", "target struct")
 	dialect      = flag.String("dialect", "", "sql dialect")
@@ -26,6 +25,8 @@ var (
 )
 
 func main() {
+	flag.Parse()
+
 	if *inFile == "" {
 		errorOut(1, "input file is required")
 	}
@@ -64,5 +65,6 @@ func main() {
 
 func errorOut(exitCode int, msg string, args ...any) {
 	slog.Error(msg, args...)
+	flag.PrintDefaults()
 	os.Exit(exitCode)
 }
