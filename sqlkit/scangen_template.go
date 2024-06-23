@@ -106,7 +106,7 @@ func (r *{{ .Dialect.String | export }}Repository) scan(row sqlkit.Scannable) (*
     err := row.Scan({{ fields "scan" .File.Fields | join }})
     if err != nil {
         if err == sql.ErrNoRows {
-            return nil, Err{{ .File.SourceType | cleanPkg }}NotFound
+            return nil, Err{{ .File.SourceType | cleanPkg | export }}NotFound
         }
 
         return nil, fmt.Errorf("scan {{ .File.SourceType | cleanPkg | unexport }}: %w", err)
