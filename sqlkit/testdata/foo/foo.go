@@ -5,15 +5,14 @@ import (
 	"time"
 )
 
-type FooType struct {
+type Foo struct {
 	A string
 	B int
-	C BazType
+	C Baz
 	D time.Time
 	E time.Time
 	F sql.NullTime
-	G QuxType
 }
 
-type BazType int
-type QuxType struct{}
+type Baz int
+type Qux struct{}

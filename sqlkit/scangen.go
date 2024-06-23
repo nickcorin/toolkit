@@ -131,7 +131,16 @@ func NewParser() *Parser {
 	return &p
 }
 
-func (p *Parser) Parse(sourceFile, targetType string) (*parsedFile, error) {
+func (p *Parser) isBuiltIn(s string) bool {
+	return p.builtIns[s]
+}
+
+func (p *Parser) isWellKnown(s string) bool {
+	_, ok := p.wellKnowns[s]
+	return ok
+}
+
+func (p *Parser) Parse(sourceFile, scangenType string) (*parsedFile, error) {
 	if filepath.Ext(sourceFile) != ".go" {
 		return nil, fmt.Errorf("source file '%s' is not a Go file", sourceFile)
 	}
@@ -153,31 +162,41 @@ func (p *Parser) Parse(sourceFile, targetType string) (*parsedFile, error) {
 		return nil, fmt.Errorf("could not type check source file: %w", err)
 	}
 
-	o := pkg.Scope().Lookup(targetType)
+	o := pkg.Scope().Lookup(scangenType)
 	if o == nil {
-		return nil, fmt.Errorf("target struct '%s' not found in source file", targetType)
+		return nil, fmt.Errorf("scangen struct '%s' not found in source file", scangenType)
 	}
 
-	targetStruct, ok := o.Type().Underlying().(*types.Struct)
+	scangenStruct, ok := o.Type().Underlying().(*types.Struct)
 	if !ok {
-		return nil, fmt.Errorf("target struct '%s' is not a struct", targetType)
+		return nil, fmt.Errorf("target struct '%s' is not a struct", scangenType)
 	}
 	file.ScanType = o.Name()
 
-	var sourceStruct *types.Struct
+	var baseStruct *types.Struct
 	// Find the embedded source type, and ensure there is only one.
-	for i := 0; i < targetStruct.NumFields(); i++ {
-		if !targetStruct.Field(i).Embedded() {
+	for i := 0; i < scangenStruct.NumFields(); i++ {
+		if !scangenStruct.Field(i).Embedded() {
 			continue
 		}
-		if sourceStruct != nil {
+		if baseStruct != nil {
 			return nil, fmt.Errorf("multiple embedded structs found in target struct")
 		}
-		sourceStruct = targetStruct.Field(i).Type().Underlying().(*types.Struct)
-		file.SourceType = filepath.Base(targetStruct.Field(i).Type().String())
+		baseStruct = scangenStruct.Field(i).Type().Underlying().(*types.Struct)
+		file.SourceType = filepath.Base(scangenStruct.Field(i).Type().String())
 	}
 
-	fs, err := p.processOverrides(p.processStruct(sourceStruct), p.processStruct(targetStruct))
+	baseFields, err := p.processStruct(baseStruct)
+	if err != nil {
+		return nil, err
+	}
+
+	overrideFields, err := p.processStruct(scangenStruct)
+	if err != nil {
+		return nil, err
+	}
+
+	fs, err := p.processOverrides(baseFields, overrideFields)
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +256,7 @@ func (p *Parser) processOverrides(fields, overrides []*field) ([]*field, error) 
 	return fields, nil
 }
 
-func (p *Parser) processStruct(s *types.Struct) []*field {
+func (p *Parser) processStruct(s *types.Struct) ([]*field, error) {
 	var fs []*field
 	for i := 0; i < s.NumFields(); i++ {
 		f := s.Field(i)
@@ -247,6 +266,24 @@ func (p *Parser) processStruct(s *types.Struct) []*field {
 			continue
 		}
 
+		switch t := f.Type().(type) {
+		case *types.Basic:
+			break
+		case *types.Named:
+			if _, ok := t.Underlying().(*types.Basic); ok {
+				break
+			}
+
+			name := filepath.Base(t.Origin().String())
+
+			if !p.isBuiltIn(name) && !p.isWellKnown(name) {
+				return nil, fmt.Errorf("unsupported field type '%s' (field '%s')", f.Type(), f.Name())
+			}
+
+		default:
+			return nil, fmt.Errorf("unsupported field type '%s' (field '%s')", f.Type(), f.Name())
+		}
+
 		fs = append(fs, &field{
 			Var:  f.Name(),
 			Type: f.Type(),
@@ -254,7 +291,7 @@ func (p *Parser) processStruct(s *types.Struct) []*field {
 		})
 	}
 
-	return fs
+	return fs, nil
 }
 
 func toSnakeCase(s string) string {
