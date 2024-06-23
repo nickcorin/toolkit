@@ -52,8 +52,8 @@ import (
 {{- end }}
 )
 {{ end }}
-// Err{{ .File.SourceType | cleanPkg }}NotFound is returned when a query for a {{ .File.SourceType }} returns no results.
-var Err{{ .File.SourceType | cleanPkg }}NotFound = errors.New("{{ .File.SourceType | cleanPkg | unexport }} not found")
+// Err{{ .File.SourceType | cleanPkg | export }}NotFound is returned when a query for a {{ .File.SourceType }} returns no results.
+var Err{{ .File.SourceType | cleanPkg | export }}NotFound = errors.New("{{ .File.SourceType | cleanPkg | unexport }} not found")
 
 type {{ .Dialect.String | export }}Repository struct {
     conn *sql.DB
