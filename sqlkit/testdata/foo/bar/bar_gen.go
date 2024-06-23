@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/nickcorin/toolkit/sqlkit"
+
 	foo "github.com/nickcorin/toolkit/sqlkit/testdata/foo"
 )
 

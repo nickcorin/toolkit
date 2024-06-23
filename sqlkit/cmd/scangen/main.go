@@ -16,8 +16,10 @@ import (
  */
 
 var (
-	inFile       = flag.String("in", "", "file containing the scangen type")
-	outFile      = flag.String("out", "", "file to ")
+	inFile  = flag.String("in", "", "file containing the scangen type")
+	outFile = flag.String("out", "", "file to ")
+
+	tableName    = flag.String("tableName", "", "name of the table")
 	targetStruct = flag.String("type", "", "target struct")
 	dialect      = flag.String("dialect", "", "sql dialect")
 	locals       = flag.String("local", "", "comma separated list of local package paths")
@@ -47,7 +49,14 @@ func main() {
 		errorOut(1, "could not parse file: %w", err)
 	}
 
-	err = sqlkit.Generate(sqlkit.Dialect(*dialect), *targetStruct, parsed, *outFile)
+	config := sqlkit.GenerateConfig{
+		Dialect:    sqlkit.GetDialectFromString(*dialect),
+		TableName:  *tableName,
+		OutputFile: *outFile,
+		LocalPaths: *locals,
+	}
+
+	err = sqlkit.Generate(&config, parsed)
 	if err != nil {
 		errorOut(1, "could not generate code: %w", err)
 	}
