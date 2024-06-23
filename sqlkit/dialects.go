@@ -6,14 +6,42 @@ import (
 	"os"
 )
 
+//go:generate stringer -type=Dialect -linecomment
+
 // Dialect represents a type of SQL database.
 //
 // E.g. Postgres, MySQL, SQLite.
-type Dialect string
+type Dialect int
 
 const (
-	Postgres Dialect = "postgres"
+	UnknownDialect Dialect = iota // unknown
+	Postgres                      // postgres
+	MySQL                         // mysql
+	sentinel
 )
+
+// GetDialectFromString returns a Dialect from a string. It may not necessarily return a valid dialect.
+func GetDialectFromString(s string) Dialect {
+	var d Dialect
+	for i := UnknownDialect; i < sentinel; i++ {
+		if i.String() == s {
+			d = i
+			break
+		}
+	}
+
+	return d
+}
+
+// String returns the string representation of the dialect.
+func (d Dialect) String() string {
+	return string(d)
+}
+
+// Valid returns true if the dialect is a valid dialect.
+func (d Dialect) Valid() bool {
+	return d > UnknownDialect && d < sentinel
+}
 
 // ErrUnsupportedDialect is returned when the dialect is not supported.
 var ErrUnsupportedDialect = fmt.Errorf("unsupported dialect")
@@ -21,7 +49,7 @@ var ErrUnsupportedDialect = fmt.Errorf("unsupported dialect")
 // GetConnector returns a Connector for the given dialect.
 func GetConnector(d Dialect) (Connector, error) {
 	switch d {
-	case "postgres":
+	case Postgres:
 		return postgres{}, nil
 	default:
 		return nil, ErrUnsupportedDialect
