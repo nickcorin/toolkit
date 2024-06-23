@@ -16,7 +16,7 @@ import (
  */
 
 var (
-	inFile  = flag.String("in", os.Getenv("$GOFILE"), "file containing the scangen type")
+	inFile  = flag.String("in", os.Getenv("GOFILE"), "file containing the scangen type")
 	outFile = flag.String("out", "", "file to ")
 
 	tableName    = flag.String("tableName", "", "name of the table")
