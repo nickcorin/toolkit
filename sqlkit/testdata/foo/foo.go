@@ -15,4 +15,3 @@ type Foo struct {
 }
 
 type Baz int
-type Qux struct{}
