@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/nickcorin/toolkit/sqlkit"
 )
@@ -31,8 +33,12 @@ func main() {
 		errorOut(1, "input file is required")
 	}
 
+	if filepath.Ext(*inFile) != ".go" {
+		errorOut(1, "input file must be a .go file")
+	}
+
 	if *outFile == "" {
-		*outFile = fmt.Sprintf("%s_gen.go", *inFile)
+		*outFile = fmt.Sprintf("%s_gen.go", strings.TrimSuffix(*inFile, ".go"))
 	}
 
 	if *targetStruct == "" {

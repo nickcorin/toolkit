@@ -79,7 +79,10 @@ func (r *{{ .Dialect.String | export }}Repository) lookupWhere(ctx context.Conte
 }
 
 func (r *{{ .Dialect.String | export }}Repository) listWhere(ctx context.Context, where string, args ...any) ([]*{{ .File.SourceType }}, error) {
-    rows := r.conn.QueryContext(ctx, fmt.Sprintf(r.selectPrefix() + " WHERE %s", where), args...)
+    rows, err := r.conn.QueryContext(ctx, fmt.Sprintf(r.selectPrefix() + " WHERE %s", where), args...)
+    if err != nil {
+    	return nil, fmt.Errorf("list {{ .File.SourceType | cleanPkg | unexport }}: %w", err)
+    }
     return r.list(rows)
 }
 

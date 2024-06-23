@@ -39,7 +39,10 @@ func (r *PostgresRepository) lookupWhere(ctx context.Context, where string, args
 }
 
 func (r *PostgresRepository) listWhere(ctx context.Context, where string, args ...any) ([]*foo.Foo, error) {
-	rows := r.conn.QueryContext(ctx, fmt.Sprintf(r.selectPrefix()+" WHERE %s", where), args...)
+	rows, err := r.conn.QueryContext(ctx, fmt.Sprintf(r.selectPrefix()+" WHERE %s", where), args...)
+	if err != nil {
+		return nil, fmt.Errorf("list foo: %w", err)
+	}
 	return r.list(rows)
 }
 
