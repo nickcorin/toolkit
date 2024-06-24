@@ -255,17 +255,18 @@ func (p *Parser) processOverrides(fields, overrides []*field) ([]*field, error) 
 
 		if s, ok := override.Type.(*types.Named); ok {
 			t := filepath.Base(s.Origin().Obj().Type().String())
-
-			if c, ok := p.wellKnowns[t]; ok {
-				if s.TypeArgs().At(0).String() == fields[i].Type.String() {
-					override.Conversion = c
-					fields[i] = override
-					continue
-				}
+			c, ok := p.wellKnowns[t]
+			if !ok {
+				return nil, fmt.Errorf("type '%s' (field '%s') is not well-known", override.Type, override.Var)
 			}
-		}
 
-		return nil, fmt.Errorf("cannot convert type '%s' to '%s' (field '%s')", override.Type, fields[i].Type, override.Var)
+			if s.TypeArgs().Len() > 0 && s.TypeArgs().At(0).String() != fields[i].Type.String() {
+				return nil, fmt.Errorf("cannot convert type '%s' to '%s' (field '%s')", override.Type, fields[i].Type, override.Var)
+			}
+
+			override.Conversion = c
+			fields[i] = override
+		}
 	}
 
 	return fields, nil

@@ -11,6 +11,6 @@ type bar struct {
 	foo.Foo
 
 	C int
-	D time.Time `sqlkit:"d_override"`
+	D sql.NullTime `sqlkit:"d_override"`
 	E sql.Null[time.Time]
 }

@@ -77,7 +77,7 @@ func (r *PostgresRepository) scan(row sqlkit.Scannable) (*foo.Foo, error) {
 	ret.A = scan.A
 	ret.B = scan.B
 	ret.C = foo.Baz(scan.C)
-	ret.D = scan.D
+	ret.D = scan.D.Time
 	ret.E = scan.E.V
 	ret.F = scan.F
 
