@@ -18,12 +18,12 @@ import (
  */
 
 var (
-	inFile       = flag.String("in", os.Getenv("GOFILE"), "file containing the scangen type")
-	outFile      = flag.String("out", "", "output file to write")
-	tableName    = flag.String("tableName", "", "name of the table")
-	targetStruct = flag.String("type", "", "target struct")
-	dialect      = flag.String("dialect", "", "sql dialect")
-	locals       = flag.String("local", "", "comma separated list of local package paths")
+	inFile     = flag.String("in", os.Getenv("GOFILE"), "file containing the scangen type")
+	outFile    = flag.String("out", "", "output file to write")
+	table      = flag.String("table", "", "name of the table")
+	targetType = flag.String("type", "", "target struct")
+	dialect    = flag.String("dialect", "", "sql dialect")
+	locals     = flag.String("local", "", "comma separated list of local package paths")
 )
 
 func main() {
@@ -41,8 +41,8 @@ func main() {
 		*outFile = fmt.Sprintf("%s_gen.go", strings.TrimSuffix(*inFile, ".go"))
 	}
 
-	if *targetStruct == "" {
-		errorOut(1, "target struct is required")
+	if *targetType == "" {
+		errorOut(1, "target type cannot be empty")
 	}
 
 	if *dialect == "" {
@@ -51,14 +51,14 @@ func main() {
 
 	p := sqlkit.NewParser()
 
-	parsed, err := p.Parse(*inFile, *targetStruct)
+	parsed, err := p.Parse(*inFile, *targetType)
 	if err != nil {
 		errorOut(1, "could not parse file: %w", err)
 	}
 
 	config := sqlkit.GenerateConfig{
 		Dialect:    sqlkit.GetDialectFromString(*dialect),
-		TableName:  *tableName,
+		TableName:  *table,
 		OutputFile: *outFile,
 		LocalPaths: *locals,
 	}
