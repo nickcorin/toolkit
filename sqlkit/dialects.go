@@ -53,15 +53,15 @@ func GetConnector(d Dialect) (Connector, error) {
 
 // Connector is an interface that provides methods for configuring a database connection.
 type Connector interface {
-	Defaults() Config
+	Defaults() *Config
 	Driver() string
-	DSN(cfg Config) string
+	DSN(cfg *Config) string
 }
 
 type postgres struct{}
 
-func (p postgres) Defaults() Config {
-	return Config{
+func (p postgres) Defaults() *Config {
+	return &Config{
 		Host:     "localhost",
 		User:     os.Getenv("USER"),
 		Port:     5432,
@@ -74,6 +74,6 @@ func (p postgres) Driver() string {
 	return "pgx"
 }
 
-func (p postgres) DSN(c Config) string {
+func (p postgres) DSN(c *Config) string {
 	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?%s", c.User, c.Password, c.Host, c.Port, c.Database, c.Flags.Encode())
 }

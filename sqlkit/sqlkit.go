@@ -22,19 +22,48 @@ var (
 
 // Config represents the configuration for a database connection.
 type Config struct {
-	Host     string
-	Port     int
-	User     string
-	Password string
-	Database string
-	Flags    url.Values
+	Host     string     `envconfig:"HOST"`
+	Port     int        `envconfig:"PORT"`
+	User     string     `envconfig:"USER"`
+	Password string     `envconfig:"PASSWORD"`
+	Database string     `envconfig:"DATABASE"`
+	Flags    url.Values `envconfig:"FLAGS"`
 }
 
-func Connect(ctx context.Context, dialect Dialect, config Config) (*sql.DB, error) {
+func (c *Config) OverrideWith(custom *Config) {
+	if c.Host == "" {
+		c.Host = custom.Host
+	}
+	if c.Port == 0 {
+		c.Port = custom.Port
+	}
+	if c.User == "" {
+		c.User = custom.User
+	}
+	if c.Password == "" {
+		c.Password = custom.Password
+	}
+	if c.Database == "" {
+		c.Database = custom.Database
+	}
+	if c.Flags == nil {
+		c.Flags = custom.Flags
+	} else {
+		for k, v := range custom.Flags {
+			if _, ok := c.Flags[k]; !ok {
+				c.Flags[k] = v
+			}
+		}
+	}
+}
+
+func Connect(ctx context.Context, dialect Dialect, config *Config) (*sql.DB, error) {
 	connector, err := GetConnector(dialect)
 	if err != nil {
 		return nil, fmt.Errorf("get connector: %w", err)
 	}
+
+	config.OverrideWith(connector.Defaults())
 
 	conn, err := connectWithDSN(ctx, connector.Driver(), connector.DSN(config))
 	if err != nil {
