@@ -38,18 +38,23 @@ func (f *Flags) Encode() string {
 	return url.Values(*f).Encode()
 }
 
+// Get wraps url.Values.Get.
+func (f *Flags) Get(key string) string {
+	return url.Values(*f).Get(key)
+}
+
 // Set wraps url.Values.Set.
 func (f *Flags) Set(key, value string) {
 	url.Values(*f).Set(key, value)
 }
 
 // Set implements the envconfig.Decoder interface.
-func (f Flags) Decode(value string) error {
+func (f *Flags) Decode(value string) error {
 	query, err := url.ParseQuery(value)
 	if err != nil {
 		return err
 	}
-	f = Flags(query)
+	*f = Flags(query)
 
 	return nil
 }
