@@ -33,6 +33,11 @@ type Config struct {
 // Flags is an alias for url.Values.
 type Flags url.Values
 
+// Encode wraps url.Values.Encode.
+func (f Flags) Encode() string {
+	return url.Values(f).Encode()
+}
+
 // Set implements the flag.Value interface.
 func (f Flags) Set(value string) error {
 	query, err := url.ParseQuery(value)
