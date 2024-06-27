@@ -22,12 +22,12 @@ var (
 
 // Config represents the configuration for a database connection.
 type Config struct {
-	Host     string     `envconfig:"HOST"`
-	Port     int        `envconfig:"PORT"`
-	User     string     `envconfig:"USER"`
-	Password string     `envconfig:"PASSWORD"`
-	Database string     `envconfig:"DATABASE"`
-	Flags    url.Values `envconfig:"FLAGS"`
+	Host     string `envconfig:"HOST"`
+	Port     int    `envconfig:"PORT"`
+	User     string `envconfig:"USER"`
+	Password string `envconfig:"PASSWORD"`
+	Database string `envconfig:"DATABASE"`
+	Flags    Flags  `envconfig:"FLAGS"`
 }
 
 // Flags is an alias for url.Values.
