@@ -30,6 +30,20 @@ type Config struct {
 	Flags    url.Values `envconfig:"FLAGS"`
 }
 
+// Flags is an alias for url.Values.
+type Flags url.Values
+
+// Set implements the flag.Value interface.
+func (f Flags) Set(value string) error {
+	query, err := url.ParseQuery(value)
+	if err != nil {
+		return err
+	}
+	f = Flags(query)
+
+	return nil
+}
+
 func (c *Config) OverrideWith(custom *Config) {
 	if c.Host == "" {
 		c.Host = custom.Host

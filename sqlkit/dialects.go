@@ -34,8 +34,9 @@ func GetDialectFromString(s string) Dialect {
 }
 
 // Set implements the flag.Value interface.
-func (d *Dialect) Set(value string) {
+func (d *Dialect) Set(value string) error {
 	*d = GetDialectFromString(value)
+	return nil
 }
 
 // Valid returns true if the dialect is a valid dialect.
