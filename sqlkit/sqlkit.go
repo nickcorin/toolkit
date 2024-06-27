@@ -34,13 +34,13 @@ type Config struct {
 type Flags url.Values
 
 // Encode wraps url.Values.Encode.
-func (f Flags) Encode() string {
-	return url.Values(f).Encode()
+func (f *Flags) Encode() string {
+	return url.Values(*f).Encode()
 }
 
 // Set wraps url.Values.Set.
-func (f Flags) Set(key, value string) {
-	url.Values(f).Set(key, value)
+func (f *Flags) Set(key, value string) {
+	url.Values(*f).Set(key, value)
 }
 
 // Set implements the envconfig.Decoder interface.
