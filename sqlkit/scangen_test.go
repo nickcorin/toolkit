@@ -81,7 +81,7 @@ func assertGolden(t *testing.T, goldenFile string, actual []byte) {
 	t.Helper()
 
 	if *update {
-		err := os.WriteFile(goldenFile, actual, 0644)
+		err := os.WriteFile(goldenFile, actual, 0o644)
 		require.NoError(t, err)
 		return
 	}
