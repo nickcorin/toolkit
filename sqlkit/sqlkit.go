@@ -38,8 +38,13 @@ func (f Flags) Encode() string {
 	return url.Values(f).Encode()
 }
 
-// Set implements the flag.Value interface.
-func (f Flags) Set(value string) error {
+// Set wraps url.Values.Set.
+func (f Flags) Set(key, value string) {
+	url.Values(f).Set(key, value)
+}
+
+// Set implements the envconfig.Decoder interface.
+func (f Flags) Decode(value string) error {
 	query, err := url.ParseQuery(value)
 	if err != nil {
 		return err

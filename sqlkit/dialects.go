@@ -2,7 +2,6 @@ package sqlkit
 
 import (
 	"fmt"
-	"net/url"
 	"os"
 )
 
@@ -33,8 +32,8 @@ func GetDialectFromString(s string) Dialect {
 	return d
 }
 
-// Set implements the flag.Value interface.
-func (d *Dialect) Set(value string) error {
+// Decode implements the envconfig.Decoder interface.
+func (d *Dialect) Decode(value string) error {
 	*d = GetDialectFromString(value)
 	return nil
 }
@@ -72,7 +71,7 @@ func (p postgres) Defaults() *Config {
 		User:     os.Getenv("USER"),
 		Port:     5432,
 		Database: "postgres",
-		Flags:    make(url.Values),
+		Flags:    make(Flags),
 	}
 }
 
