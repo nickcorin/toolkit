@@ -67,6 +67,7 @@ type postgres struct{}
 
 func (p postgres) Defaults() *Config {
 	return &Config{
+		Dialect:  Postgres,
 		Host:     "localhost",
 		User:     os.Getenv("USER"),
 		Port:     5432,

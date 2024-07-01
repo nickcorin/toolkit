@@ -45,7 +45,7 @@ func TestConnectForTesting_Postgres(t *testing.T) {
 			conf := connector.Defaults()
 			conf.Database = s
 
-			conn, err := sqlkit.Connect(context.Background(), sqlkit.Postgres, conf)
+			conn, err := sqlkit.Connect(context.Background(), conf)
 			require.Empty(t, conn)
 			require.Error(t, err)
 			require.True(t, sqlkit.PgErrorIs(err, pgerrcode.InvalidCatalogName))

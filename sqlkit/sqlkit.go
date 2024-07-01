@@ -22,12 +22,13 @@ var (
 
 // Config represents the configuration for a database connection.
 type Config struct {
-	Host     string `envconfig:"HOST"`
-	Port     int    `envconfig:"PORT"`
-	User     string `envconfig:"USER"`
-	Password string `envconfig:"PASSWORD"`
-	Database string `envconfig:"DATABASE"`
-	Flags    Flags  `envconfig:"FLAGS"`
+	Dialect  Dialect `envconfig:"DIALECT"`
+	Host     string  `envconfig:"HOST"`
+	Port     int     `envconfig:"PORT"`
+	User     string  `envconfig:"USER"`
+	Password string  `envconfig:"PASSWORD"`
+	Database string  `envconfig:"DATABASE"`
+	Flags    Flags   `envconfig:"FLAGS"`
 }
 
 // Flags is an alias for url.Values.
@@ -86,8 +87,8 @@ func (c *Config) OverrideWith(custom *Config) {
 	}
 }
 
-func Connect(ctx context.Context, dialect Dialect, config *Config) (*sql.DB, error) {
-	connector, err := GetConnector(dialect)
+func Connect(ctx context.Context, config *Config) (*sql.DB, error) {
+	connector, err := GetConnector(config.Dialect)
 	if err != nil {
 		return nil, fmt.Errorf("get connector: %w", err)
 	}
