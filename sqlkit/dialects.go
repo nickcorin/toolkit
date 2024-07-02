@@ -3,6 +3,8 @@ package sqlkit
 import (
 	"fmt"
 	"os"
+
+	"github.com/kelseyhightower/envconfig"
 )
 
 //go:generate stringer -type=Dialect -linecomment
@@ -58,22 +60,29 @@ func GetConnector(d Dialect) (Connector, error) {
 
 // Connector is an interface that provides methods for configuring a database connection.
 type Connector interface {
-	Defaults() *Config
+	Defaults() (*Config, error)
 	Driver() string
 	DSN(cfg *Config) string
 }
 
 type postgres struct{}
 
-func (p postgres) Defaults() *Config {
-	return &Config{
+func (p postgres) Defaults() (*Config, error) {
+	var c Config
+	if err := envconfig.Process("", &c); err != nil {
+		return nil, fmt.Errorf("failed to process env variables: %w", err)
+	}
+
+	c.OverrideWith(&Config{
 		Dialect:  Postgres,
 		Host:     "localhost",
 		User:     os.Getenv("USER"),
 		Port:     5432,
 		Database: "postgres",
 		Flags:    make(Flags),
-	}
+	})
+
+	return &c, nil
 }
 
 func (p postgres) Driver() string {

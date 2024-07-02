@@ -15,6 +15,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/stretchr/testify/require"
 )
 
 func ConnectForTesting(t *testing.T, dialect Dialect, migrationsFS embed.FS) (*sql.DB, error) {
@@ -25,7 +26,9 @@ func ConnectForTesting(t *testing.T, dialect Dialect, migrationsFS embed.FS) (*s
 		return nil, fmt.Errorf("get connector: %w", err)
 	}
 
-	conf := connector.Defaults()
+	conf, err := connector.Defaults()
+	require.NoError(t, err)
+
 	conf.Flags.Set("sslmode", "disable")
 
 	// Create a connection to the default database.

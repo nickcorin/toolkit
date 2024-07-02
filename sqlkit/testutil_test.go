@@ -42,7 +42,9 @@ func TestConnectForTesting_Postgres(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, connector)
 
-			conf := connector.Defaults()
+			conf, err := connector.Defaults()
+			require.NoError(t, err)
+
 			conf.Database = s
 
 			conn, err := sqlkit.Connect(context.Background(), conf)
