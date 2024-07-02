@@ -8,6 +8,7 @@ import (
 	"net/url"
 
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/kelseyhightower/envconfig"
 )
 
 // Scannable is an interface that wraps the Scan method.
@@ -93,6 +94,12 @@ func Connect(ctx context.Context, config *Config) (*sql.DB, error) {
 		return nil, fmt.Errorf("get connector: %w", err)
 	}
 
+	var c Config
+	if err := envconfig.Process("", &c); err != nil {
+		return nil, fmt.Errorf("load env config: %w", err)
+	}
+
+	config.OverrideWith(&c)
 	config.OverrideWith(connector.Defaults())
 
 	conn, err := connectWithDSN(ctx, connector.Driver(), connector.DSN(config))
