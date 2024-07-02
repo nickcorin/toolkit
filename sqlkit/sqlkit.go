@@ -99,10 +99,10 @@ func Connect(ctx context.Context, config *Config) (*sql.DB, error) {
 		return nil, fmt.Errorf("load env config: %w", err)
 	}
 
-	config.OverrideWith(&c)
-	config.OverrideWith(connector.Defaults())
+	c.OverrideWith(config)
+	c.OverrideWith(connector.Defaults())
 
-	conn, err := connectWithDSN(ctx, connector.Driver(), connector.DSN(config))
+	conn, err := connectWithDSN(ctx, connector.Driver(), connector.DSN(&c))
 	if err != nil {
 		return nil, fmt.Errorf("connect with dsn: %w", err)
 	}
