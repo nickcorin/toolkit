@@ -15,30 +15,30 @@ import (
 // ErrFooNotFound is returned when a query for a foo.Foo returns no results.
 var ErrFooNotFound = errors.New("foo not found")
 
-type PostgresRepository struct {
+type PostgresRespository struct {
 	conn      *sql.DB
 	tableName string
 	cols      []string
 }
 
-func NewPostgresRepository(conn *sql.DB) *PostgresRepository {
-	return &PostgresRepository{
+func NewPostgresRespository(conn *sql.DB) *PostgresRespositoryRepository {
+	return &PostgresRespositoryRepository{
 		conn:      conn,
 		tableName: "foos",
 		cols:      []string{"a", "b", "c", "d_override", "e", "f"},
 	}
 }
 
-func (r *PostgresRepository) selectPrefix() string {
+func (r *PostgresRespository) selectPrefix() string {
 	return fmt.Sprintf("SELECT %s FROM %s", strings.Join(r.cols, ", "), r.tableName)
 }
 
-func (r *PostgresRepository) lookupWhere(ctx context.Context, where string, args ...any) (*foo.Foo, error) {
+func (r *PostgresRespository) lookupWhere(ctx context.Context, where string, args ...any) (*foo.Foo, error) {
 	row := r.conn.QueryRowContext(ctx, fmt.Sprintf(r.selectPrefix()+" WHERE %s", where), args...)
 	return r.scan(row)
 }
 
-func (r *PostgresRepository) listWhere(ctx context.Context, where string, args ...any) ([]*foo.Foo, error) {
+func (r *PostgresRespository) listWhere(ctx context.Context, where string, args ...any) ([]*foo.Foo, error) {
 	rows, err := r.conn.QueryContext(ctx, fmt.Sprintf(r.selectPrefix()+" WHERE %s", where), args...)
 	if err != nil {
 		return nil, fmt.Errorf("list foo: %w", err)
@@ -46,7 +46,7 @@ func (r *PostgresRepository) listWhere(ctx context.Context, where string, args .
 	return r.list(rows)
 }
 
-func (r *PostgresRepository) list(rows *sql.Rows) ([]*foo.Foo, error) {
+func (r *PostgresRespository) list(rows *sql.Rows) ([]*foo.Foo, error) {
 	ret := make([]*foo.Foo, 0)
 	for rows.Next() {
 		item, err := r.scan(rows)
@@ -60,7 +60,7 @@ func (r *PostgresRepository) list(rows *sql.Rows) ([]*foo.Foo, error) {
 	return ret, nil
 }
 
-func (r *PostgresRepository) scan(row sqlkit.Scannable) (*foo.Foo, error) {
+func (r *PostgresRespository) scan(row sqlkit.Scannable) (*foo.Foo, error) {
 	var scan bar
 
 	err := row.Scan(&scan.A, &scan.B, &scan.C, &scan.D, &scan.E, &scan.F)

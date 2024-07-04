@@ -13,6 +13,8 @@ import (
 	"path/filepath"
 	"reflect"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"golang.org/x/tools/imports"
 )
 
@@ -22,7 +24,8 @@ type GenerateConfig struct {
 	TableName string
 
 	// Path to which to write the generated code.
-	OutputFile string
+	OutputFile   string
+	OutputStruct string
 
 	// A comma separated list of import paths to pass to goimports.
 	// See: https://pkg.go.dev/golang.org/x/tools/imports/forward.go#LocalPrefix
@@ -43,9 +46,14 @@ func Generate(config *GenerateConfig, pf *parsedFile) error {
 	}
 
 	td := templateData{
-		Dialect:   config.Dialect,
-		File:      pf,
-		TableName: config.TableName,
+		Dialect:      config.Dialect,
+		File:         pf,
+		OutputStruct: config.OutputStruct,
+		TableName:    config.TableName,
+	}
+
+	if td.OutputStruct == "" {
+		td.OutputStruct = cases.Title(language.English).String(config.Dialect.String()) + "Respository"
 	}
 
 	var buffer bytes.Buffer
@@ -68,9 +76,10 @@ func Generate(config *GenerateConfig, pf *parsedFile) error {
 }
 
 type templateData struct {
-	Dialect   Dialect
-	TableName string
-	File      *parsedFile
+	Dialect      Dialect
+	OutputStruct string
+	TableName    string
+	File         *parsedFile
 }
 
 type parsedFile struct {

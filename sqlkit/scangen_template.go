@@ -55,30 +55,30 @@ import (
 // Err{{ .File.SourceType | cleanPkg | export }}NotFound is returned when a query for a {{ .File.SourceType }} returns no results.
 var Err{{ .File.SourceType | cleanPkg | export }}NotFound = errors.New("{{ .File.SourceType | cleanPkg | unexport }} not found")
 
-type {{ .Dialect.String | export }}Repository struct {
+type {{ .OutputStruct }} struct {
     conn *sql.DB
     tableName string
     cols     []string
 }
 
-func New{{ .Dialect.String | export }}Repository(conn *sql.DB) *{{ .Dialect.String | export }}Repository {
-    return &{{ .Dialect.String | export }}Repository{
+func New{{ .OutputStruct }}(conn *sql.DB) *{{ .OutputStruct }}Repository {
+    return &{{ .OutputStruct }}Repository{
         conn: conn,
         tableName: "{{ .TableName }}",
         cols: []string{ {{- .File.Fields | cols | join -}} },
     }
 }
 
-func (r *{{ .Dialect.String | export }}Repository) selectPrefix() string {
+func (r *{{ .OutputStruct }}) selectPrefix() string {
 	return fmt.Sprintf("SELECT %s FROM %s", strings.Join(r.cols, ", "), r.tableName)
 }
 
-func (r *{{ .Dialect.String | export }}Repository) lookupWhere(ctx context.Context, where string, args ...any) (*{{ .File.SourceType }}, error) {
+func (r *{{ .OutputStruct }}) lookupWhere(ctx context.Context, where string, args ...any) (*{{ .File.SourceType }}, error) {
     row := r.conn.QueryRowContext(ctx, fmt.Sprintf(r.selectPrefix() + " WHERE %s", where), args...)
     return r.scan(row)
 }
 
-func (r *{{ .Dialect.String | export }}Repository) listWhere(ctx context.Context, where string, args ...any) ([]*{{ .File.SourceType }}, error) {
+func (r *{{ .OutputStruct }}) listWhere(ctx context.Context, where string, args ...any) ([]*{{ .File.SourceType }}, error) {
     rows, err := r.conn.QueryContext(ctx, fmt.Sprintf(r.selectPrefix() + " WHERE %s", where), args...)
     if err != nil {
     	return nil, fmt.Errorf("list {{ .File.SourceType | cleanPkg | unexport }}: %w", err)
@@ -86,7 +86,7 @@ func (r *{{ .Dialect.String | export }}Repository) listWhere(ctx context.Context
     return r.list(rows)
 }
 
-func (r *{{ .Dialect.String | export }}Repository) list(rows *sql.Rows) ([]*{{ .File.SourceType }}, error) {
+func (r *{{ .OutputStruct }}) list(rows *sql.Rows) ([]*{{ .File.SourceType }}, error) {
    ret := make([]*{{ .File.SourceType }}, 0)
     for rows.Next() {
         item, err := r.scan(rows)
@@ -100,7 +100,7 @@ func (r *{{ .Dialect.String | export }}Repository) list(rows *sql.Rows) ([]*{{ .
     return ret, nil
 }
 
-func (r *{{ .Dialect.String | export }}Repository) scan(row sqlkit.Scannable) (*{{ .File.SourceType }}, error) {
+func (r *{{ .OutputStruct }}) scan(row sqlkit.Scannable) (*{{ .File.SourceType }}, error) {
     var scan {{ .File.ScanType }}
 
     err := row.Scan({{ fields "scan" .File.Fields | join }})
