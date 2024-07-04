@@ -61,8 +61,8 @@ type {{ .OutputStruct }} struct {
     cols     []string
 }
 
-func New{{ .OutputStruct }}(conn *sql.DB) *{{ .OutputStruct }}Repository {
-    return &{{ .OutputStruct }}Repository{
+func New{{ .OutputStruct }}(conn *sql.DB) *{{ .OutputStruct }} {
+    return &{{ .OutputStruct }}{
         conn: conn,
         tableName: "{{ .TableName }}",
         cols: []string{ {{- .File.Fields | cols | join -}} },
