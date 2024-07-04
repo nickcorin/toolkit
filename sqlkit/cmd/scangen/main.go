@@ -20,9 +20,11 @@ import (
 var (
 	inFile  = flag.String("inFile", os.Getenv("GOFILE"), "file containing the scangen type")
 	outFile = flag.String("outFile", "", "output file to write")
+
 	table   = flag.String("table", "", "name of the table")
 	inType  = flag.String("inType", "", "input struct")
 	outType = flag.String("outType", "", "output struct")
+
 	dialect = flag.String("dialect", "", "sql dialect")
 	locals  = flag.String("local", "", "comma separated list of local package paths")
 )
@@ -54,7 +56,7 @@ func main() {
 
 	parsed, err := p.Parse(*inFile, *inType)
 	if err != nil {
-		errorOut(1, "could not parse file: %w", err)
+		errorOut(1, "could not parse file: %s", err.Error())
 	}
 
 	config := sqlkit.GenerateConfig{
@@ -67,7 +69,7 @@ func main() {
 
 	err = sqlkit.Generate(&config, parsed)
 	if err != nil {
-		errorOut(1, "could not generate code: %w", err)
+		errorOut(1, "could not generate code: %s", err.Error())
 	}
 }
 
