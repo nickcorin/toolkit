@@ -18,10 +18,10 @@ import (
  */
 
 var (
-	inFile  = flag.String("in", os.Getenv("GOFILE"), "file containing the scangen type")
-	outFile = flag.String("out", "", "output file to write")
+	inFile  = flag.String("inFile", os.Getenv("GOFILE"), "file containing the scangen type")
+	outFile = flag.String("outFile", "", "output file to write")
 	table   = flag.String("table", "", "name of the table")
-	inType  = flag.String("type", "", "input struct")
+	inType  = flag.String("inType", "", "input struct")
 	outType = flag.String("outType", "", "output struct")
 	dialect = flag.String("dialect", "", "sql dialect")
 	locals  = flag.String("local", "", "comma separated list of local package paths")
