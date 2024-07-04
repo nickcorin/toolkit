@@ -21,8 +21,8 @@ type Foo struct {
 	cols      []string
 }
 
-func NewFoo(conn *sql.DB) *FooRepository {
-	return &FooRepository{
+func NewFoo(conn *sql.DB) *Foo {
+	return &Foo{
 		conn:      conn,
 		tableName: "foos",
 		cols:      []string{"a", "b", "c", "d_override", "e", "f"},

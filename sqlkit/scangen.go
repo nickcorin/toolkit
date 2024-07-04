@@ -53,7 +53,7 @@ func Generate(config *GenerateConfig, pf *parsedFile) error {
 	}
 
 	if td.OutputStruct == "" {
-		td.OutputStruct = cases.Title(language.English).String(config.Dialect.String()) + "Respository"
+		td.OutputStruct = cases.Title(language.English).String(config.Dialect.String()) + "Repository"
 	}
 
 	var buffer bytes.Buffer
