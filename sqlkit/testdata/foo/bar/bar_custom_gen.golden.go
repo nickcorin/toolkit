@@ -25,7 +25,7 @@ func NewFoo(conn *sql.DB) *Foo {
 	return &Foo{
 		conn:      conn,
 		tableName: "foos",
-		cols:      []string{"a", "b", "c", "d_override", "e", "f"},
+		cols:      []string{"a", "c", "d_override", "e", "f"},
 	}
 }
 
@@ -63,7 +63,7 @@ func (r *Foo) list(rows *sql.Rows) ([]*foo.Foo, error) {
 func (r *Foo) scan(row sqlkit.Scannable) (*foo.Foo, error) {
 	var scan bar
 
-	err := row.Scan(&scan.A, &scan.B, &scan.C, &scan.D, &scan.E, &scan.F)
+	err := row.Scan(&scan.A, &scan.C, &scan.D, &scan.E, &scan.F)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, ErrFooNotFound
@@ -75,7 +75,6 @@ func (r *Foo) scan(row sqlkit.Scannable) (*foo.Foo, error) {
 	var ret foo.Foo
 
 	ret.A = scan.A
-	ret.B = scan.B
 	ret.C = foo.Baz(scan.C)
 	ret.D = scan.D.Time
 	ret.E = scan.E.V

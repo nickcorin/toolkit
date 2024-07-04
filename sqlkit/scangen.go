@@ -220,8 +220,6 @@ func (p *Parser) Parse(sourceFile, scangenType string) (*parsedFile, error) {
 			return nil
 		}
 
-		fmt.Printf("'%s' is NOT generated!\n", path)
-
 		if strings.Contains(f.Name.Name, "_test") {
 			return nil
 		}
@@ -310,14 +308,22 @@ func (p *Parser) Parse(sourceFile, scangenType string) (*parsedFile, error) {
 func (p *Parser) processOverrides(fields, overrides []*field) ([]*field, error) {
 	fm := make(map[string]*field)
 
-	// We first add and validate all the fields from the source struct.
+	// Index the overrides by field name.
 	for _, f := range overrides {
 		fm[f.Var] = f
 	}
 
-	for i := range fields {
+	for i := 0; i < len(fields); i++ {
 		override, ok := fm[fields[i].Var]
 		if !ok {
+			continue
+		}
+
+		// Remove the field if the tag is set to "-".
+		if override.Tag == "-" {
+			fields = append(fields[:i], fields[i+1:]...)
+			i--
+
 			continue
 		}
 
@@ -334,6 +340,8 @@ func (p *Parser) processOverrides(fields, overrides []*field) ([]*field, error) 
 			continue
 		}
 
+		// There is some magic happening here to check generic types.
+		// For example sql.NullTime vs sql.Null[time.Time] (sql.Null[T any]).
 		if s, ok := override.Type.(*types.Named); ok {
 			t := filepath.Base(s.Origin().Obj().Type().String())
 			c, ok := p.wellKnowns[t]
