@@ -9,6 +9,7 @@ import (
 	"go/parser"
 	"go/token"
 	"go/types"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -200,16 +201,23 @@ func (p *Parser) Parse(sourceFile, scangenType string) (*parsedFile, error) {
 	var file parsedFile
 	fset := token.NewFileSet()
 	asts := make([]*ast.File, 0)
-	dir := filepath.Dir(sourceFile)
 
-	err := filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
-		if d.IsDir() {
-			return nil
+	sourceDir := filepath.Dir(sourceFile)
+
+	entries, err := fs.ReadDir(os.DirFS(sourceDir), ".")
+	if err != nil {
+		return nil, fmt.Errorf("could not read dir '%s': %w", sourceDir, err)
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
 		}
 
+		path := filepath.Join(sourceDir, entry.Name())
 		f, err := parser.ParseFile(fset, path, nil, parser.ParseComments|parser.AllErrors)
 		if err != nil {
-			return fmt.Errorf("could not parse source file '%s': %w", path, err)
+			return nil, fmt.Errorf("could not parse source file '%s': %w", path, err)
 		}
 
 		// Skip generated files.
@@ -217,20 +225,15 @@ func (p *Parser) Parse(sourceFile, scangenType string) (*parsedFile, error) {
 		// This reduces the search space later, and also prevents some errors when multiple generated test files
 		// exist within the same package.
 		if ast.IsGenerated(f) {
-			return nil
+			continue
 		}
 
 		if strings.Contains(f.Name.Name, "_test") {
-			return nil
+			continue
 		}
 
 		file.Pkg = f.Name.Name
 		asts = append(asts, f)
-
-		return nil
-	})
-	if err != nil {
-		return nil, fmt.Errorf("could not walk dir '%s': %w", dir, err)
 	}
 
 	conf := types.Config{Importer: importer.ForCompiler(fset, "source", nil)}
