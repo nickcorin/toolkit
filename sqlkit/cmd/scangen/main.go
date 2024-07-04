@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -10,12 +11,6 @@ import (
 
 	"github.com/nickcorin/toolkit/sqlkit"
 )
-
-/*
- *
- * go:generate --in=. --out=. --dialect=postgres --type=Foo --local=github.com/nickcorin/toolkit/sqlkit/testdata/foo
- *
- */
 
 var (
 	inFile  = flag.String("inFile", os.Getenv("GOFILE"), "file containing the scangen type")
@@ -33,11 +28,11 @@ func main() {
 	flag.Parse()
 
 	if *inFile == "" {
-		errorOut(1, "input file is required")
+		errorOut(1, errors.New("input file is required"))
 	}
 
 	if filepath.Ext(*inFile) != ".go" {
-		errorOut(1, "input file must be a .go file")
+		errorOut(1, errors.New("input file must be a .go file"))
 	}
 
 	if *outFile == "" {
@@ -45,18 +40,18 @@ func main() {
 	}
 
 	if *inType == "" {
-		errorOut(1, "target type cannot be empty")
+		errorOut(1, errors.New("target type cannot be empty"))
 	}
 
 	if *dialect == "" {
-		errorOut(1, "dialect is required")
+		errorOut(1, errors.New("dialect is required"))
 	}
 
 	p := sqlkit.NewParser()
 
 	parsed, err := p.Parse(*inFile, *inType)
 	if err != nil {
-		errorOut(1, "could not parse file: %s", err.Error())
+		errorOut(1, fmt.Errorf("could not parse file: %w", err))
 	}
 
 	config := sqlkit.GenerateConfig{
@@ -69,12 +64,12 @@ func main() {
 
 	err = sqlkit.Generate(&config, parsed)
 	if err != nil {
-		errorOut(1, "could not generate code: %s", err.Error())
+		errorOut(1, fmt.Errorf("could not generate code: %w", err))
 	}
 }
 
-func errorOut(exitCode int, msg string, args ...any) {
-	slog.Error(msg, args...)
+func errorOut(exitCode int, err error) {
+	slog.Error(err.Error())
 	flag.PrintDefaults()
 	os.Exit(exitCode)
 }

@@ -12,7 +12,10 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
+	"text/template"
 
+	"github.com/nickcorin/toolkit/sqlkit/templates"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"golang.org/x/tools/imports"
@@ -24,7 +27,9 @@ type GenerateConfig struct {
 	TableName string
 
 	// Path to which to write the generated code.
-	OutputFile   string
+	OutputFile string
+
+	// Name of the struct to generate.
 	OutputStruct string
 
 	// A comma separated list of import paths to pass to goimports.
@@ -57,7 +62,45 @@ func Generate(config *GenerateConfig, pf *parsedFile) error {
 	}
 
 	var buffer bytes.Buffer
-	if err := scangenTemplate.Execute(&buffer, td); err != nil {
+	t, err := template.New("scangen").Funcs(template.FuncMap{
+		"cleanPath": func(pkg string) string {
+			return filepath.Base(pkg)
+		},
+		"cleanPkg": func(pkg string) string {
+			if strings.Index(pkg, ".") > 0 {
+				return strings.Split(pkg, ".")[1]
+			}
+			return pkg
+		},
+		"cols": func(fields []*field) []string {
+			cols := make([]string, 0)
+			for _, f := range fields {
+				cols = append(cols, fmt.Sprintf("\"%s\"", f.Col()))
+			}
+			return cols
+		},
+		"export": func(s string) string {
+			return strings.ToUpper(s[:1]) + s[1:]
+		},
+		"fields": func(prefix string, fields []*field) []string {
+			fs := make([]string, 0)
+			for _, f := range fields {
+				fs = append(fs, fmt.Sprintf("&%s.%s", prefix, f.Var))
+			}
+			return fs
+		},
+		"join": func(s []string) string {
+			return strings.Join(s, ", ")
+		},
+		"unexport": func(s string) string {
+			return strings.ToLower(s[:1]) + s[1:]
+		},
+	}).Parse(templates.Scangen)
+	if err != nil {
+		return fmt.Errorf("could not parse template: %w", err)
+	}
+
+	if err := t.Execute(&buffer, td); err != nil {
 		return fmt.Errorf("could not execute template: %w", err)
 	}
 
@@ -156,17 +199,46 @@ func (p *Parser) Parse(sourceFile, scangenType string) (*parsedFile, error) {
 
 	var file parsedFile
 	fset := token.NewFileSet()
+	asts := make([]*ast.File, 0)
+	dir := filepath.Dir(sourceFile)
 
-	f, err := parser.ParseFile(fset, sourceFile, nil, parser.AllErrors)
+	err := filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
+		if d.IsDir() {
+			return nil
+		}
+
+		f, err := parser.ParseFile(fset, path, nil, parser.ParseComments|parser.AllErrors)
+		if err != nil {
+			return fmt.Errorf("could not parse source file '%s': %w", path, err)
+		}
+
+		// Skip generated files.
+		//
+		// This reduces the search space later, and also prevents some errors when multiple generated test files
+		// exist within the same package.
+		if ast.IsGenerated(f) {
+			return nil
+		}
+
+		fmt.Printf("'%s' is NOT generated!\n", path)
+
+		if strings.Contains(f.Name.Name, "_test") {
+			return nil
+		}
+
+		file.Pkg = f.Name.Name
+		asts = append(asts, f)
+
+		return nil
+	})
 	if err != nil {
-		return nil, fmt.Errorf("could not parse source file: %w", err)
+		return nil, fmt.Errorf("could not walk dir '%s': %w", dir, err)
 	}
-	file.Pkg = f.Name.Name
 
 	conf := types.Config{Importer: importer.ForCompiler(fset, "source", nil)}
 	info := types.Info{Defs: make(map[*ast.Ident]types.Object)}
 
-	pkg, err := conf.Check(f.Name.Name, fset, []*ast.File{f}, &info)
+	pkg, err := conf.Check(file.Pkg, fset, asts, &info)
 	if err != nil {
 		return nil, fmt.Errorf("could not type check source file: %w", err)
 	}
