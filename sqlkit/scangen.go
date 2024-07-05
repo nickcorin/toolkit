@@ -220,14 +220,6 @@ func (p *Parser) Parse(sourceFile, scangenType string) (*parsedFile, error) {
 			return nil, fmt.Errorf("could not parse source file '%s': %w", path, err)
 		}
 
-		// Skip generated files.
-		//
-		// This reduces the search space later, and also prevents some errors when multiple generated test files
-		// exist within the same package.
-		if ast.IsGenerated(f) {
-			continue
-		}
-
 		if strings.Contains(f.Name.Name, "_test") {
 			continue
 		}

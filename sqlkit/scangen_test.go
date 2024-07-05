@@ -75,14 +75,14 @@ func TestGenerate(t *testing.T) {
 
 	t.Run("successful generation, custom output struct", func(t *testing.T) {
 		const (
-			inFile     = "testdata/foo/bar/bar.go"
-			outFile    = "testdata/foo/bar/bar_custom_gen.go"
-			goldenFile = "testdata/foo/bar/bar_custom_gen.golden.go"
+			inFile     = "testdata/qux/qux.go"
+			outFile    = "testdata/qux/qux_custom_gen.go"
+			goldenFile = "testdata/qux/qux_custom_gen.golden.go"
 		)
 
-		parsed, err := parser.Parse(inFile, "bar")
-		require.NotNil(t, parsed)
+		parsed, err := parser.Parse(inFile, "gen")
 		require.NoError(t, err)
+		require.NotNil(t, parsed)
 
 		t.Cleanup(func() {
 			err = os.Remove(outFile)
@@ -91,9 +91,9 @@ func TestGenerate(t *testing.T) {
 
 		config := sqlkit.GenerateConfig{
 			Dialect:      sqlkit.Postgres,
-			TableName:    "foos",
+			TableName:    "quxes",
 			OutputFile:   outFile,
-			OutputStruct: "Foo",
+			OutputStruct: "QuxRepository",
 			LocalPaths:   "github.com/nickcorin/toolkit",
 		}
 
