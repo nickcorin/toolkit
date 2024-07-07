@@ -33,6 +33,10 @@ func (r *PostgresRepository) selectPrefix() string {
 	return fmt.Sprintf("SELECT %s FROM %s", strings.Join(r.cols, ", "), r.tableName)
 }
 
+func (r *PostgresRepository) selectDistinctPrefix() string {
+	return fmt.Sprintf("SELECT DISTINCT %s FROM %s", strings.Join(r.cols, ", "), r.tableName)
+}
+
 func (r *PostgresRepository) lookupWhere(ctx context.Context, where string, args ...any) (*foo.Foo, error) {
 	row := r.conn.QueryRowContext(ctx, fmt.Sprintf(r.selectPrefix()+" WHERE %s", where), args...)
 	return r.scan(row)
@@ -40,6 +44,14 @@ func (r *PostgresRepository) lookupWhere(ctx context.Context, where string, args
 
 func (r *PostgresRepository) listWhere(ctx context.Context, where string, args ...any) ([]*foo.Foo, error) {
 	rows, err := r.conn.QueryContext(ctx, fmt.Sprintf(r.selectPrefix()+" WHERE %s", where), args...)
+	if err != nil {
+		return nil, fmt.Errorf("list foo: %w", err)
+	}
+	return r.list(rows)
+}
+
+func (r *PostgresRepository) listDistinctWhere(ctx context.Context, where string, args ...any) ([]*foo.Foo, error) {
+	rows, err := r.conn.QueryContext(ctx, fmt.Sprintf(r.selectDistinctPrefix()+" WHERE %s", where), args...)
 	if err != nil {
 		return nil, fmt.Errorf("list foo: %w", err)
 	}
