@@ -43,7 +43,8 @@ func (r *{{ .OutputStruct }}) listWhere(ctx context.Context, where string, args 
 }
 
 func (r *{{ .OutputStruct }}) list(rows *sql.Rows) ([]*{{ .File.SourceType }}, error) {
-   ret := make([]*{{ .File.SourceType }}, 0)
+    defer rows.Close()
+    ret := make([]*{{ .File.SourceType }}, 0)
     for rows.Next() {
         item, err := r.scan(rows)
         if err != nil {

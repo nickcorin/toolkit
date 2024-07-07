@@ -46,6 +46,7 @@ func (r *QuxRepository) listWhere(ctx context.Context, where string, args ...any
 }
 
 func (r *QuxRepository) list(rows *sql.Rows) ([]*Qux, error) {
+	defer rows.Close()
 	ret := make([]*Qux, 0)
 	for rows.Next() {
 		item, err := r.scan(rows)

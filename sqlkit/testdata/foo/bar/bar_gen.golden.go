@@ -47,6 +47,7 @@ func (r *PostgresRepository) listWhere(ctx context.Context, where string, args .
 }
 
 func (r *PostgresRepository) list(rows *sql.Rows) ([]*foo.Foo, error) {
+	defer rows.Close()
 	ret := make([]*foo.Foo, 0)
 	for rows.Next() {
 		item, err := r.scan(rows)
