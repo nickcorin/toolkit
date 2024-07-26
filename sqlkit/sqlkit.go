@@ -60,6 +60,16 @@ func (f *Flags) Decode(value string) error {
 	return nil
 }
 
+// MustParseFlags parses the given string into Flags and panics if an error occurs.
+func MustParseFlags(value string) Flags {
+	var flags Flags
+	if err := flags.Decode(value); err != nil {
+		panic(err)
+	}
+
+	return flags
+}
+
 func (c *Config) OverrideWith(custom *Config) {
 	if c.Dialect == UnknownDialect {
 		c.Dialect = custom.Dialect
