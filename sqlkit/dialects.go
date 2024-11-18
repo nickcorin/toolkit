@@ -17,7 +17,6 @@ type Dialect int
 const (
 	UnknownDialect Dialect = iota // unknown
 	Postgres                      // postgres
-	MySQL                         // mysql
 	sentinel
 )
 

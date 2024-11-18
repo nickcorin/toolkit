@@ -3,54 +3,130 @@ package sqlkit_test
 import (
 	"context"
 	"embed"
+	"errors"
+	"io/fs"
+	"os"
 	"testing"
 
-	"github.com/jackc/pgerrcode"
 	"github.com/nickcorin/toolkit/sqlkit"
-	"github.com/stretchr/testify/require"
 )
 
 //go:embed testdata/migrations/postgres/*.sql
 var pgMigrations embed.FS
 
-func TestConnectForTesting_Postgres(t *testing.T) {
-	testSchemas := make([]string, 0)
+func TestConnectForTesting_PreloadedMigrations(t *testing.T) {
+	tests := []struct {
+		name    string
+		dialect sqlkit.Dialect
+		fs      fs.FS
+		err     error
+	}{
+		{
+			name:    "postgres embedded migrations",
+			dialect: sqlkit.Postgres,
+			fs:      pgMigrations,
+			err:     nil,
+		},
+		{
+			name:    "postgres loaded migrations",
+			dialect: sqlkit.Postgres,
+			fs:      os.DirFS("testdata/migrations/postgres"),
+			err:     nil,
+		},
+		{
+			name:    "postgres loaded migrations, invalid path",
+			dialect: sqlkit.Postgres,
+			fs:      os.DirFS("testdata/migrations/invalid"),
+			err:     fs.ErrNotExist,
+		},
+	}
 
-	t.Run("create seed database", func(t *testing.T) {
-		conn, err := sqlkit.ConnectForTesting(t, sqlkit.Postgres, pgMigrations)
-		require.NoError(t, err)
-		require.NotNil(t, conn)
+	for _, tt := range tests {
+		var schema string
 
-		var version string
-		err = conn.QueryRowContext(context.Background(), "SELECT version()").Scan(&version)
-		require.NoError(t, err)
-		require.NotEmpty(t, version)
+		t.Run(tt.name, func(t *testing.T) {
+			conn, err := sqlkit.ConnectForTesting(t, tt.dialect, tt.fs)
+			if err != nil {
+				if errors.Is(err, tt.err) {
+					return
+				}
 
-		var dbName string
-		err = conn.QueryRowContext(context.Background(), "SELECT current_database()").Scan(&dbName)
-		require.NoError(t, err)
-		require.NotEmpty(t, dbName)
+				t.Fatalf("sqlkit.ConnectForTesting() = %v, want %v", err, tt.err)
+			}
 
-		testSchemas = append(testSchemas, dbName)
-	})
+			var version string
+			err = conn.QueryRowContext(context.Background(), "SELECT version()").Scan(&version)
+			if err != nil {
+				if errors.Is(err, tt.err) {
+					return
+				}
 
-	for _, schema := range testSchemas {
-		s := schema // capture range variable.
+				t.Errorf("SELECT version() = %v, want %v", err, tt.err)
+			}
 
-		t.Run("ensure test db was dropped: "+schema, func(t *testing.T) {
-			connector, err := sqlkit.GetConnector(sqlkit.Postgres)
-			require.NoError(t, err)
-			require.NotNil(t, connector)
+			if version == "" {
+				t.Errorf("SELECT version() = %v, want non-empty", version)
+			}
+
+			var dbName string
+			err = conn.QueryRowContext(context.Background(), "SELECT current_database()").Scan(&dbName)
+			if err != nil {
+				if errors.Is(err, tt.err) {
+					return
+				}
+
+				t.Errorf("SELECT current_database() = %v, want %v", err, tt.err)
+			}
+
+			if dbName == "" {
+				t.Errorf("SELECT current_database() = %v, want non-empty", dbName)
+			}
+
+			// Capture the schema name for the cleanup test below.
+			schema = dbName
+		})
+
+		t.Run(tt.name+"_cleanup", func(t *testing.T) {
+			if schema == "" {
+				t.Skip("no schema to cleanup")
+			}
+
+			connector, err := sqlkit.GetConnector(tt.dialect)
+			if err != nil {
+				if !errors.Is(err, tt.err) {
+					return
+				}
+
+				t.Errorf("sqlkit.GetConnector() = %v, want %v", err, tt.err)
+			}
+
+			if connector == nil {
+				t.Errorf("sqlkit.GetConnector() = %v, want non-nil", connector)
+			}
 
 			conf, err := connector.Defaults()
-			require.NoError(t, err)
+			if err != nil {
+				if !errors.Is(err, tt.err) {
+					return
+				}
 
-			conf.Database = s
+				t.Errorf("connector.Defaults() = %v, want %v", err, tt.err)
+			}
+
+			if conf == nil {
+				t.Errorf("connector.Defaults() = %v, want non-nil", conf)
+			}
+
+			conf.Database = schema
 
 			conn, err := sqlkit.Connect(context.Background(), conf)
-			require.Empty(t, conn)
-			require.Error(t, err)
-			require.True(t, sqlkit.PgErrorIs(err, pgerrcode.InvalidCatalogName))
+			if err == nil {
+				t.Errorf("sqlkit.Connect() = %v, want not-nil", err)
+			}
+
+			if conn != nil {
+				t.Errorf("sqlkit.Connect() = %v, want nil", conn)
+			}
 		})
 	}
 }

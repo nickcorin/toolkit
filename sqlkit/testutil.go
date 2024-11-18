@@ -3,8 +3,8 @@ package sqlkit
 import (
 	"context"
 	"database/sql"
-	"embed"
 	"fmt"
+	"io/fs"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func ConnectForTesting(t *testing.T, dialect Dialect, migrationsFS embed.FS) (*sql.DB, error) {
+func ConnectForTesting(t *testing.T, dialect Dialect, migrationsFS fs.FS) (*sql.DB, error) {
 	t.Helper()
 
 	connector, err := GetConnector(dialect)
@@ -104,7 +104,7 @@ func dropDatabase(t *testing.T, conn *sql.DB, name string) error {
 	return nil
 }
 
-func findMigrationsPath(t *testing.T, migrations embed.FS, startDir string) (string, error) {
+func findMigrationsPath(t *testing.T, migrations fs.FS, startDir string) (string, error) {
 	t.Helper()
 
 	dirQueue := []string{startDir}
@@ -113,7 +113,7 @@ func findMigrationsPath(t *testing.T, migrations embed.FS, startDir string) (str
 		dir := dirQueue[0]
 		dirQueue = dirQueue[1:]
 
-		entries, err := migrations.ReadDir(dir)
+		entries, err := fs.ReadDir(migrations, dir)
 		if err != nil {
 			return "", fmt.Errorf("read dir: %w", err)
 		}
