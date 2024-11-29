@@ -71,7 +71,7 @@ func MustParseFlags(value string) Flags {
 }
 
 func (c *Config) OverrideWith(custom *Config) {
-	if c.Dialect == UnknownDialect {
+	if c.Dialect == Unspecified {
 		c.Dialect = custom.Dialect
 	}
 	if c.Host == "" {

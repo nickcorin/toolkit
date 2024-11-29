@@ -8,14 +8,14 @@ func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
-	_ = x[UnknownDialect-0]
+	_ = x[Unspecified-0]
 	_ = x[Postgres-1]
 	_ = x[sentinel-2]
 }
 
-const _Dialect_name = "unknownpostgressentinel"
+const _Dialect_name = "unspecifiedpostgressentinel"
 
-var _Dialect_index = [...]uint8{0, 7, 15, 23}
+var _Dialect_index = [...]uint8{0, 11, 19, 27}
 
 func (i Dialect) String() string {
 	if i < 0 || i >= Dialect(len(_Dialect_index)-1) {

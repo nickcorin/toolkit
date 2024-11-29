@@ -3,6 +3,7 @@ package sqlkit
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/kelseyhightower/envconfig"
 )
@@ -15,16 +16,16 @@ import (
 type Dialect int
 
 const (
-	UnknownDialect Dialect = iota // unknown
-	Postgres                      // postgres
+	Unspecified Dialect = iota // unspecified
+	Postgres                   // postgres
 	sentinel
 )
 
 // GetDialectFromString returns a Dialect from a string. It may not necessarily return a valid dialect.
 func GetDialectFromString(s string) Dialect {
 	var d Dialect
-	for i := UnknownDialect; i < sentinel; i++ {
-		if i.String() == s {
+	for i := Unspecified; i < sentinel; i++ {
+		if strings.EqualFold(i.String(), s) {
 			d = i
 			break
 		}
@@ -41,7 +42,7 @@ func (d *Dialect) Decode(value string) error {
 
 // Valid returns true if the dialect is a valid dialect.
 func (d Dialect) Valid() bool {
-	return d > UnknownDialect && d < sentinel
+	return d > Unspecified && d < sentinel
 }
 
 // ErrUnsupportedDialect is returned when the dialect is not supported.
@@ -51,9 +52,9 @@ var ErrUnsupportedDialect = fmt.Errorf("unsupported dialect")
 func GetConnector(d Dialect) (Connector, error) {
 	switch d {
 	case Postgres:
-		return postgres{}, nil
+		return new(PostgresConnector), nil
 	default:
-		return nil, ErrUnsupportedDialect
+		return nil, fmt.Errorf("%w: %q", ErrUnsupportedDialect, d)
 	}
 }
 
@@ -64,9 +65,9 @@ type Connector interface {
 	DSN(cfg *Config) string
 }
 
-type postgres struct{}
+type PostgresConnector struct{}
 
-func (p postgres) Defaults() (*Config, error) {
+func (p *PostgresConnector) Defaults() (*Config, error) {
 	var c Config
 	if err := envconfig.Process("", &c); err != nil {
 		return nil, fmt.Errorf("failed to process env variables: %w", err)
@@ -84,10 +85,10 @@ func (p postgres) Defaults() (*Config, error) {
 	return &c, nil
 }
 
-func (p postgres) Driver() string {
+func (p *PostgresConnector) Driver() string {
 	return "pgx"
 }
 
-func (p postgres) DSN(c *Config) string {
+func (p *PostgresConnector) DSN(c *Config) string {
 	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?%s", c.User, c.Password, c.Host, c.Port, c.Database, c.Flags.Encode())
 }
